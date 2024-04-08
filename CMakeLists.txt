@@ -8,7 +8,6 @@ SET(CMAKE_BUILD_TYPE Debug)
 
 set(SOURCES
     frame-logger.c
-    module.c
 )
 
 add_executable(frame-logger ${SOURCES})

@@ -3,16 +3,41 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pcap/pcap.h>
+#include <getopt.h>
 
-#include "module.h"
-
-
-int main(void)
+void usage(void)
 {
-    printf("Hello World\n");
-    printf("pcap lib version: %s\n", pcap_lib_version());
-    call_internal_function();
+  printf("Usage:\n"
+    "\t-r,--read\t\tRead from file. Use '-' for stdin\n");
+}
 
-    return 0;
+int main(int argc, char *argv[])
+{
+  printf("%s\n", pcap_lib_version());
+
+  int opt_key;
+  int option_index = 0;
+  struct option long_options[] = {
+    {"read", required_argument, NULL, 'r'},
+    // {"output-file", required_argument, NULL, 'o'},
+    // {"verbose", no_argument, NULL, 'v'},
+    {NULL, 0, NULL, 0}
+  };
+
+  while ((opt_key = getopt_long(argc, argv, "r:v", long_options, &option_index)) != -1) {
+    switch (opt_key) {
+      case 'r':
+        printf("Input file: %s\n", optarg);
+        break;
+      case '?':
+        usage();
+        return 1;
+      default:
+        break;
+    }
+  }
+
+  return 0;
 }
