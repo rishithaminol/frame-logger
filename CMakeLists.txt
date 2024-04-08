@@ -12,3 +12,5 @@ set(SOURCES
 )
 
 add_executable(frame-logger ${SOURCES})
+
+target_link_libraries(frame-logger pcap)
