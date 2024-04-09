@@ -4,8 +4,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pcap/pcap.h>
 #include <getopt.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <signal.h>
 
 void usage(void)
 {
@@ -15,8 +18,6 @@ void usage(void)
 
 int main(int argc, char *argv[])
 {
-  printf("%s\n", pcap_lib_version());
-
   int opt_key;
   int option_index = 0;
   struct option long_options[] = {
