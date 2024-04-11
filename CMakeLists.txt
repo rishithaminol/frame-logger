@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(SOURCES
     frame-logger.c
+    logging.c
 )
 
 # -------------------------- json-c build process ---------------------------

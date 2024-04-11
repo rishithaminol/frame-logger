@@ -5,22 +5,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-
 #include <pcap/pcap.h>
 
-void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header) {
+#include "logging.h"
+
+
+
+void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header)
+{
     printf("Packet capture length: %d\n", packet_header.caplen);
     printf("Packet total length %d\n", packet_header.len);
 }
 
-int get_packet(char *interf_name) {
+int get_packet(char *interf_name)
+{
     char *device = interf_name;
     char error_buffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
     const uint8_t *packet;
     struct pcap_pkthdr packet_header;
     int packet_count_limit = 1;
-    int timeout_limit = 10; /* In milliseconds */
+    int timeout_limit = 0; /* In milliseconds */
 
     /* device = pcap_lookupdev(error_buffer);
     if (device == NULL) {
@@ -37,6 +42,10 @@ int get_packet(char *interf_name) {
             timeout_limit,
             error_buffer
         );
+    if (handle == NULL) {
+        log_error("Some kind of error happened with pcap_open_live");
+        return 2;
+    }
 
      /* Attempt to capture one packet. If there is no network traffic
       and the timeout is reached, it will return NULL */
@@ -69,6 +78,9 @@ int main(int argc, char *argv[])
         // {"verbose", no_argument, NULL, 'v'},
         {NULL, 0, NULL, 0}
     };
+
+    // json_play();
+    // return 0;
 
 
     while ((opt_key = getopt_long(argc, argv, "r:i:v", long_options, &option_index)) != -1) {
