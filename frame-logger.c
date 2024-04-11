@@ -9,12 +9,11 @@
 
 #include "logging.h"
 
-
-
 void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header)
 {
     printf("Packet capture length: %d\n", packet_header.caplen);
     printf("Packet total length %d\n", packet_header.len);
+    printf("timestamp: %ld\n", packet_header.ts.tv_usec);
 }
 
 int get_packet(char *interf_name)
@@ -25,7 +24,7 @@ int get_packet(char *interf_name)
     const uint8_t *packet;
     struct pcap_pkthdr packet_header;
     int packet_count_limit = 1;
-    int timeout_limit = 0; /* In milliseconds */
+    int timeout_limit = 10000; /* In milliseconds */
 
     /* device = pcap_lookupdev(error_buffer);
     if (device == NULL) {
@@ -47,10 +46,26 @@ int get_packet(char *interf_name)
         return 2;
     }
 
-     /* Attempt to capture one packet. If there is no network traffic
-      and the timeout is reached, it will return NULL */
-     packet = pcap_next(handle, &packet_header);
-     if (packet == NULL) {
+    switch (pcap_get_tstamp_precision(handle)) {
+        case PCAP_TSTAMP_PRECISION_MICRO:
+            log_info("Timestamp percision: PCAP_TSTAMP_PRECISION_MICRO");
+            break;
+        case PCAP_TSTAMP_PRECISION_NANO:
+            log_info("Timestamp percision: PCAP_TSTAMP_PRECISION_MICRO");
+            break;
+        default:
+            log_error("SOme other value");
+    }
+
+    int ret = pcap_set_tstamp_precision(handle, PCAP_TSTAMP_PRECISION_NANO);
+    if (ret == PCAP_ERROR_ACTIVATED) {
+        log_error("Error activating Nanosecond percision");
+    }
+
+    /* Attempt to capture one packet. If there is no network traffic
+    and the timeout is reached, it will return NULL */
+    packet = pcap_next(handle, &packet_header);
+    if (packet == NULL) {
         printf("No packet found.\n");
         return 2;
     }
