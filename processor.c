@@ -1,19 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pcap/pcap.h>
+#include <netinet/in.h>
+#include <net/ethernet.h>
 #include <json.h>
+#include <string.h>
 
 #include "logging.h"
 
 static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header)
 {
-    struct json_object *jobj;
-
-    jobj = json_object_new_object();
-
     char copy_str[50];
     double t_sec = (double)packet_header.ts.tv_sec;
     double t_usec = (double)packet_header.ts.tv_usec;
+    struct json_object *jobj = json_object_new_object();
+    char ether_type[256];
+
+    /* Determine packet type */
+    struct ether_header *eth_header;
+    eth_header = (struct ether_header *)packet;
+    
+    if (ntohs(eth_header->ether_type) == ETHERTYPE_IP) {
+        strcpy(ether_type, "IP");
+    } else if (ntohs(eth_header->ether_type) == ETHERTYPE_ARP) {
+        strcpy(ether_type, "ARP");
+    } else if (ntohs(eth_header->ether_type) == ETHERTYPE_REVARP) {
+        strcpy(ether_type, "RARP");
+    } else {
+        strcpy(ether_type, "UNRECOGNIZED");
+    }
 
     sprintf(copy_str, "%ld.%ld", packet_header.ts.tv_sec, packet_header.ts.tv_usec);
 
@@ -21,6 +36,7 @@ static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_h
     json_object_object_add(jobj, "timestamp_2", json_object_new_double(t_sec + (t_usec/1000000)));
     json_object_object_add(jobj, "length.caplen", json_object_new_int(packet_header.caplen));
     json_object_object_add(jobj, "length.total", json_object_new_int(packet_header.len));
+    json_object_object_add(jobj, "ether_type", json_object_new_string(ether_type));
     json_object_object_add(jobj, "log.level", json_object_new_string("INFO"));
 
     printf("%s\n", json_object_to_json_string_ext(jobj, JSON_C_TO_STRING_PLAIN));
@@ -86,6 +102,8 @@ int processor_packet_stream(char *net_device)
     }
 
     pcap_loop(handle, 0, frame_logger_packet_handler, NULL);
+
+    pcap_close(handle);
 
     return 0;
 }

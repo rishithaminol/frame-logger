@@ -1,5 +1,12 @@
 # Frame Logger
-An enhanced tool with packet capturing inteligence.
+A tool which capture packets in an inteligence manner.
 
-# External libraries
-`lib/` directory contains external sources used to build this program
+# Log categories
+Currently there are two types of log categories.
+
+* Logs which are specific to the tool
+* Logs which are captured packets
+
+# Guidelines
+    
+* If a variable is used by multiple functions, make sure to make them thread safe.
