@@ -10,6 +10,7 @@ set(SOURCES
     frame-logger.c
     logging.c
     processor.c
+    ethertype.c
 )
 
 # -------------------------- json-c build process ---------------------------
