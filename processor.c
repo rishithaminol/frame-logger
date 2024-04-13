@@ -19,6 +19,8 @@
 /**
  * @todo This function should have nested json structuring.
  * @todo This function should have adjusted to output accurate nanosec timestamping.
+ * @todo Create unit tests to accurately check nano second timestamping. This should be
+ *          an intergrated test which connect to Elasticsearch and do the testing.
 */
 static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header)
 {
