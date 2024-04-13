@@ -1,0 +1,39 @@
+{
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date_nanos"
+      },
+      "packet": {
+        "type": "object",
+        "properties": {
+          "caplen": {
+            "type": "numeric"
+          },
+          "total": {
+            "type": "numeric"
+          }
+        }
+      },
+      "eth": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "keywrod"
+              },
+              "value": {
+                "type": "numeric"
+              },
+              "desc": {
+                "type": "keywrod"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

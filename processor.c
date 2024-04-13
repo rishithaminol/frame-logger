@@ -9,26 +9,44 @@
 #include "logging.h"
 #include "ethertype.h"
 
+/**
+ * @brief GNU version of MAC address converter.
+*/
+static char *nto_mac (const struct ether_addr *addr, char * buf)
+{
+    snprintf(buf, 18, "%02x:%02x:%02x:%02x:%02x:%02x",
+            addr->ether_addr_octet[0], addr->ether_addr_octet[1],
+            addr->ether_addr_octet[2], addr->ether_addr_octet[3],
+            addr->ether_addr_octet[4], addr->ether_addr_octet[5]);
+    return buf;
+}
+
 
 /**
  * @todo This function should have nested json structuring.
+ * @todo This function should have adjusted to output accurate nanosec timestamping.
 */
 static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header)
 {
     double t_sec = (double)packet_header.ts.tv_sec;
     double t_usec = (double)packet_header.ts.tv_usec;
     struct json_object *jobj = json_object_new_object();
+    char src_mac[18], dst_mac[18];
 
-    /* Determine Ethernet type */
+    /* Get Ethernet header related data */
     struct ether_header *eth_header = (struct ether_header *)packet;
+    nto_mac((struct ether_addr *)eth_header->ether_shost, src_mac);
+    nto_mac((struct ether_addr *)eth_header->ether_dhost, dst_mac);
     fl_eth_type_t *eth_type = get_fl_eth_type(ntohs(eth_header->ether_type));
 
-    json_object_object_add(jobj, "timestamp_2", json_object_new_double(t_sec + (t_usec/1000000)));
-    json_object_object_add(jobj, "length.caplen", json_object_new_int(packet_header.caplen));
-    json_object_object_add(jobj, "length.total", json_object_new_int(packet_header.len));
+    json_object_object_add(jobj, "timestamp", json_object_new_double(t_sec + (t_usec/1000000)));
+    json_object_object_add(jobj, "packet_header.caplen", json_object_new_int(packet_header.caplen));
+    json_object_object_add(jobj, "packet_header.len", json_object_new_int(packet_header.len));
     json_object_object_add(jobj, "ethernet.type.code", json_object_new_string(eth_type->short_code));
     json_object_object_add(jobj, "ethernet.type.value", json_object_new_int64(ntohs(eth_header->ether_type)));
     json_object_object_add(jobj, "ethernet.type.desc", json_object_new_string(eth_type->type_desc));
+    json_object_object_add(jobj, "ethernet.addr.dst", json_object_new_string(dst_mac));
+    json_object_object_add(jobj, "ethernet.addr.src", json_object_new_string(src_mac));
     json_object_object_add(jobj, "log.level", json_object_new_string("INFO"));
 
     printf("%s\n", json_object_to_json_string_ext(jobj, JSON_C_TO_STRING_PLAIN));
@@ -39,6 +57,9 @@ static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_h
 static void frame_logger_packet_handler(unsigned char *args, const struct pcap_pkthdr *packet_header,
                         const unsigned char *packet_body)
 {
+    if (args != NULL)
+        log_info("Some argument passed to packet handler. Please check\n");
+
     print_packet_info(packet_body, *packet_header);
 }
 
@@ -71,6 +92,18 @@ int processor_packet_stream(char *net_device)
         return 1;
     }
 
+    /**
+     * @brief Nano second percision activation code.
+     * 
+     * If this code is activated, please make sure to reconfigure time calculation
+     *   at function \ref print_packet_info
+    */
+    /* if (pcap_set_tstamp_precision(handle, PCAP_TSTAMP_PRECISION_NANO) != 0) {
+        log_error("Error activating Nanosecond percision");
+        pcap_close(handle);
+        return 1;
+    } */
+
     if (pcap_activate(handle) != 0) {
         fprintf(stderr, "Error activating packet capture handle: %s\n", pcap_geterr(handle));
         pcap_close(handle);
@@ -88,9 +121,13 @@ int processor_packet_stream(char *net_device)
             log_error("SOme other value");
     }
 
-    int ret = pcap_set_tstamp_precision(handle, PCAP_TSTAMP_PRECISION_NANO);
-    if (ret != 0) {
-        log_error("Error activating Nanosecond percision");
+    /* Currently this program supports only Ethernet card types.
+     * New formats will be included in the future if possible.
+     */
+    if (pcap_datalink (handle) != DLT_EN10MB) {
+        log_error("This program only supports Ethernet cards!");
+        pcap_close(handle);
+        return 1;
     }
 
     pcap_loop(handle, 0, frame_logger_packet_handler, NULL);
