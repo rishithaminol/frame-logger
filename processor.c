@@ -6,20 +6,14 @@
 #include <json.h>
 #include <string.h>
 
+#ifdef FREEBSD_OS
+#include <netinet/if_ether.h>
+#elif LINUX_OS
+#include <netinet/ether.h>
+#endif
+
 #include "logging.h"
 #include "ethertype.h"
-
-/**
- * @brief GNU version of MAC address converter.
-*/
-static char *nto_mac (const struct ether_addr *addr, char * buf)
-{
-    snprintf(buf, 18, "%02x:%02x:%02x:%02x:%02x:%02x",
-            addr->ether_addr_octet[0], addr->ether_addr_octet[1],
-            addr->ether_addr_octet[2], addr->ether_addr_octet[3],
-            addr->ether_addr_octet[4], addr->ether_addr_octet[5]);
-    return buf;
-}
 
 
 /**
@@ -35,8 +29,8 @@ static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_h
 
     /* Get Ethernet header related data */
     struct ether_header *eth_header = (struct ether_header *)packet;
-    nto_mac((struct ether_addr *)eth_header->ether_shost, src_mac);
-    nto_mac((struct ether_addr *)eth_header->ether_dhost, dst_mac);
+    ether_ntoa_r((struct ether_addr *)eth_header->ether_shost, src_mac);
+    ether_ntoa_r((struct ether_addr *)eth_header->ether_dhost, dst_mac);
     fl_eth_type_t *eth_type = get_fl_eth_type(ntohs(eth_header->ether_type));
 
     json_object_object_add(jobj, "timestamp", json_object_new_double(t_sec + (t_usec/1000000)));

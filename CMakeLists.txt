@@ -6,6 +6,12 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_BUILD_TYPE Debug)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_compile_options(-DLINUX_OS)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  add_compile_options(-DFREEBSD_OS)
+endif()
+
 set(SOURCES
     frame-logger.c
     logging.c
