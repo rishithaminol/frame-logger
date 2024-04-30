@@ -1,0 +1,37 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "master"
+      - "development/**"
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: almalinux:8
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install libraries
+      run: |
+        sudo dnf install epel-release -y
+        sudo dnf install libpcap-devel -y
+
+    - name: Build the executable
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ../
+        make
+
+    # - name: Test
+    #   working-directory: ${{github.workspace}}/build
+    #   run: ctest -C ${{env.BUILD_TYPE}}
+
