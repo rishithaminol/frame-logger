@@ -105,11 +105,11 @@ int processor_packet_stream(char *net_device)
      * If this code is activated, please make sure to reconfigure time calculation
      *   at function \ref print_packet_info
     */
-    /* if (pcap_set_tstamp_precision(handle, PCAP_TSTAMP_PRECISION_NANO) != 0) {
+    if (pcap_set_tstamp_precision(handle, PCAP_TSTAMP_PRECISION_NANO) != 0) {
         log_error("Error activating Nanosecond percision");
         pcap_close(handle);
         return 1;
-    } */
+    }
 
     if (pcap_activate(handle) != 0) {
         fprintf(stderr, "Error activating packet capture handle: %s\n", pcap_geterr(handle));
