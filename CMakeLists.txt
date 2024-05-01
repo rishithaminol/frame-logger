@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.26)
 project (frame-logger)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
+enable_testing()
+
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -43,3 +45,6 @@ add_dependencies(${PROJECT_NAME} json-c-build)
 
 target_link_libraries(${PROJECT_NAME} pcap)
 target_link_libraries(${PROJECT_NAME} json-c)
+
+add_subdirectory(tests)
+include(CTest)
