@@ -17,6 +17,7 @@ set(SOURCES
     logging.c
     processor.c
     ethertype.c
+    timeutils.c
 )
 
 # -------------------------- json-c build process ---------------------------

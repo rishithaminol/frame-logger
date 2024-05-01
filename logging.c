@@ -27,6 +27,11 @@ static void log_common_components(struct json_object *jobj, const char *message,
     json_object_object_add(jobj, "timestamp_", json_object_new_string("This is timestamp"));
     json_object_object_add(jobj, "message", json_object_new_string(message));
 
+    /*
+    If incoming jobj does not have timestamp_
+        add it here
+    */
+
     switch (ll) {
         case DEBUG:
             json_object_object_add(jobj, "log.level", json_object_new_string("DEBUG"));
@@ -71,6 +76,6 @@ void log_error(const char *format, ...)
     va_start(args, format);
     vsnprintf(string_buffer, LOGGING_BUFFER_SIZE, format, args);
 
-    log_common_components(jobj, string_buffer, INFO);
+    log_common_components(jobj, string_buffer, ERROR);
     va_end(args);
 }

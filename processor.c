@@ -14,20 +14,31 @@
 
 #include "logging.h"
 #include "ethertype.h"
+#include "timeutils.h"
 
 
 /**
  * @todo This function should have nested json structuring.
- * @todo This function should have adjusted to output accurate nanosec timestamping.
  * @todo Create unit tests to accurately check nano second timestamping. This should be
  *          an intergrated test which connect to Elasticsearch and do the testing.
+ * @todo Implement another test to accurately check whether we output accurate timestamp
+ *          with nanoseconds.
 */
 static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_header)
 {
-    double t_sec = (double)packet_header.ts.tv_sec;
-    double t_usec = (double)packet_header.ts.tv_usec;
-    struct json_object *jobj = json_object_new_object();
     char src_mac[18], dst_mac[18];
+    struct json_object *jobj = json_object_new_object();
+
+    /* Timestamping */
+    struct timespec ts;
+    char timestr[32];
+    ts.tv_sec = (double)packet_header.ts.tv_sec;
+    ts.tv_nsec = (double)packet_header.ts.tv_usec;
+
+    if (timespec_iso8601(timestr, sizeof(timestr), &ts) != 0) {
+        log_error("timespec_iso8601 function failure failed!");
+        strcpy(timestr, "timestamping error");
+    }
 
     /* Get Ethernet header related data */
     struct ether_header *eth_header = (struct ether_header *)packet;
@@ -35,7 +46,7 @@ static void print_packet_info(const uint8_t *packet, struct pcap_pkthdr packet_h
     ether_ntoa_r((struct ether_addr *)eth_header->ether_dhost, dst_mac);
     fl_eth_type_t *eth_type = get_fl_eth_type(ntohs(eth_header->ether_type));
 
-    json_object_object_add(jobj, "timestamp", json_object_new_double(t_sec + (t_usec/1000000)));
+    json_object_object_add(jobj, "timestamp_", json_object_new_string(timestr));
     json_object_object_add(jobj, "packet_header.caplen", json_object_new_int(packet_header.caplen));
     json_object_object_add(jobj, "packet_header.len", json_object_new_int(packet_header.len));
     json_object_object_add(jobj, "ethernet.type.code", json_object_new_string(eth_type->short_code));

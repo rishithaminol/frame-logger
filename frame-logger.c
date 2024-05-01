@@ -11,12 +11,15 @@
 
 #include "logging.h"
 #include "processor.h"
+#include "timeutils.h"
 
 
 void usage(void)
 {
     printf("Usage:\n"
-           "\t-r,--read\t\tRead from file. Use '-' for stdin\n");
+           "\t-r,--read\t\tRead from file. Use '-' for stdin\n"
+           "\t-i,--interface\t\tNetwork inteface for monitoring traffic\n"
+           "\t--timezone\t\tSet timezone related data\n");
 }
 
 int main(int argc, char *argv[])
@@ -30,6 +33,8 @@ int main(int argc, char *argv[])
         // {"verbose", no_argument, NULL, 'v'},
         {NULL, 0, NULL, 0}
     };
+
+    set_timezone("UTC");
 
     while ((opt_key = getopt_long(argc, argv, "r:i:v", long_options, &option_index)) != -1) {
         switch (opt_key) {
