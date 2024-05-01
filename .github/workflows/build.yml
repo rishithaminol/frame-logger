@@ -6,9 +6,6 @@ on:
       - "master"
       - "development/**"
 
-env:
-  BUILD_TYPE: Debug
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,13 +14,17 @@ jobs:
       image: almalinux:8
 
     steps:
-    - uses: actions/checkout@v4
-
     - name: Install libraries
       run: |
-        which sudo
-        /usr/bin/sudo dnf install epel-release -y
-        /usr/bin/sudo dnf install libpcap-devel -y
+        echo "build type: ${{ vars.CMAKE_BUILD_TYPE }}"
+        dnf install 'dnf-command(config-manager)' -y
+        dnf config-manager --set-enabled powertools
+        dnf install libpcap-devel cmake git -y
+        dnf groupinstall "Development Tools" -y
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
 
     - name: Build the executable
       run: |
@@ -35,4 +36,3 @@ jobs:
     # - name: Test
     #   working-directory: ${{github.workspace}}/build
     #   run: ctest -C ${{env.BUILD_TYPE}}
-
