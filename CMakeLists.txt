@@ -46,6 +46,7 @@ add_dependencies(${PROJECT_NAME} json-c-build)
 
 target_link_libraries(${PROJECT_NAME} pcap)
 target_link_libraries(${PROJECT_NAME} json-c)
+target_link_libraries(${PROJECT_NAME} pthread)
 
 add_subdirectory(tests)
 include(CTest)

@@ -8,7 +8,7 @@ add_executable(packet_chain_count packet_chain_count.c
                 ../timeutils.c
                 ../ethertype.c)
 
-target_link_libraries(packet_chain_count json-c pcap)
+target_link_libraries(packet_chain_count json-c pcap pthread)
 
 add_test(NAME timestamping_test COMMAND timestamping)
 add_test(NAME Packet_Count_Test_ssh.pcap
