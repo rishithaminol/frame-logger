@@ -112,7 +112,7 @@ int processor_packet_stream(char *source, packet_chain_t *chain,
                             processor_opt_t p_opt)
 {
     char error_buffer[PCAP_ERRBUF_SIZE];
-    pcap_t *handle;
+    pcap_t *handle = NULL;
     pthread_t thrd1;
 
     if (p_opt & STREAM_NET_INTERFACE) {
