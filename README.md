@@ -1,5 +1,5 @@
 # Frame Logger
-A tool which capture packets in an inteligence manner.
+A tool which capture packets in an inteligence manner. This can run in memory safe way.
 
 # Log categories
 Currently there are two types of log categories.

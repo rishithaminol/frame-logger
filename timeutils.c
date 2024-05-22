@@ -13,8 +13,6 @@
  * @param[ts]  The `timespec` which contains unix timestamp. Whenever you
  *              have unix timestamps, convert it into timespec and input.
  * 
- * @todo Need to add unit testing for this section
- *
  * This function converts seconds portion `ts.tv_sec` into a `struct tm` type.
  *  Then using that `tm` we can generate year, month, date, hour, minute
  *  and seconds portion of the timestamp string. Finally append nanosecond

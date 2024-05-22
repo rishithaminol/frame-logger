@@ -12,6 +12,7 @@
 #include "logging.h"
 #include "processor.h"
 #include "timeutils.h"
+#include "packet_chain.h"
 
 
 void usage(void)
@@ -33,6 +34,7 @@ int main(int argc, char *argv[])
         // {"verbose", no_argument, NULL, 'v'},
         {NULL, 0, NULL, 0}
     };
+    packet_chain_t *chain = new_packet_chain();
 
     set_timezone("UTC");
 
@@ -42,7 +44,8 @@ int main(int argc, char *argv[])
                 printf("Input file: %s\n", optarg);
                 break;
             case 'i':
-                processor_packet_stream(optarg);
+                processor_packet_stream(optarg, chain,
+                                        STREAM_NET_INTERFACE | JSON_LOGGER);
                 break;
             case '?':
                 usage();

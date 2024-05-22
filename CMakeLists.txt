@@ -20,6 +20,7 @@ set(SOURCES
     processor.c
     ethertype.c
     timeutils.c
+    packet_chain.c
 )
 
 # -------------------------- json-c build process ---------------------------
