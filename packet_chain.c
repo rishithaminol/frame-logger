@@ -13,6 +13,8 @@
  *          and at the same time pop out packet from the packet_chain. At the
  *          end of the process check whether the required amount of packets
  *          processed within the packet_chain.
+ * @todo Design Unit tests to check whether \ref packet_chain_t is defensive for
+ *          memory leaks.
  * 
  * \ref packet_chain_t is a linked list of packet_link(s). There are 3 states
  * of a \ref packet_chain_t.

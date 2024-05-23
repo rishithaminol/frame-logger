@@ -12,13 +12,13 @@ int main(int argc, char *argv[])
     packet_link_t *link;
 
     if (argc < 3) {
-        fprintf(stderr, "Please provide file name");
+        fprintf(stderr, "Please provide file name\n");
         exit(1);
     }
 
     count = atoi(argv[2]);
     if (count == 0) {
-        fprintf(stderr, "Please insert valid integer 2nd argument.");
+        fprintf(stderr, "Please insert valid integer 2nd argument.\n");
         exit(1);
     }
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     printf("Captured packets: %d\n", i);
 
     if (i != count){
-        fprintf(stderr, "Number of packets and captured packets does not match\n");
+        fprintf(stderr, "Desired number of packets and captured packet count does not match\n");
         return 1;
     }
 

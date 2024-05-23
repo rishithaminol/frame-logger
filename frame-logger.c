@@ -23,6 +23,9 @@ void usage(void)
            "\t--timezone\t\tSet timezone related data\n");
 }
 
+/**
+ * @todo configure `--timezone` option
+*/
 int main(int argc, char *argv[])
 {
     int opt_key;
@@ -41,7 +44,8 @@ int main(int argc, char *argv[])
     while ((opt_key = getopt_long(argc, argv, "r:i:v", long_options, &option_index)) != -1) {
         switch (opt_key) {
             case 'r':
-                printf("Input file: %s\n", optarg);
+                processor_packet_stream(optarg, chain,
+                                        STREAM_FILE | JSON_LOGGER);
                 break;
             case 'i':
                 processor_packet_stream(optarg, chain,
