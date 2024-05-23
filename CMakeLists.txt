@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.26)
 
-project (frame-logger)
+project (frame-logger VERSION 0.1.0)
+
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 1)
+set(PROJECT_VERSION_PATCH 0)
+
+configure_file(prog_version.h.in ${CMAKE_BINARY_DIR}/prog_version.h)
+include_directories(${CMAKE_BINARY_DIR})
+
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 enable_testing()

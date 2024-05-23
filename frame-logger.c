@@ -13,6 +13,7 @@
 #include "processor.h"
 #include "timeutils.h"
 #include "packet_chain.h"
+#include "prog_version.h"
 
 
 void usage(void)
@@ -20,7 +21,8 @@ void usage(void)
     printf("Usage:\n"
            "\t-r,--read\t\tRead from file. Use '-' for stdin\n"
            "\t-i,--interface\t\tNetwork inteface for monitoring traffic\n"
-           "\t--timezone\t\tSet timezone related data\n");
+           "\t--timezone\t\tSet timezone related data\n"
+           "\t--version\t\tProgram version");
 }
 
 /**
@@ -33,6 +35,7 @@ int main(int argc, char *argv[])
     struct option long_options[] = {
         {"read", required_argument, NULL, 'r'},
         {"interface", required_argument, NULL, 'i'},
+        {"version", no_argument, NULL, 'v'},
         // {"output-file", required_argument, NULL, 'o'},
         // {"verbose", no_argument, NULL, 'v'},
         {NULL, 0, NULL, 0}
@@ -50,6 +53,12 @@ int main(int argc, char *argv[])
             case 'i':
                 processor_packet_stream(optarg, chain,
                                         STREAM_NET_INTERFACE | JSON_LOGGER);
+                break;
+            case 'v':
+                printf("%s version: %d.%d.%d\n", argv[0],
+                                       PROJECT_VERSION_MAJOR,
+                                       PROJECT_VERSION_MINOR,
+                                       PROJECT_VERSION_PATCH);
                 break;
             case '?':
                 usage();
