@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <json.h>
+#include <time.h>
+#include <string.h>
 
 #include "logging.h"
+#include "timeutils.h"
 
 /**
  * @brief This is inserted as an argument into \ref log_common_components function.
@@ -24,13 +27,19 @@ typedef enum LOG_LEVEL {
 */
 static void log_common_components(struct json_object *jobj, const char *message, log_level_t ll)
 {
-    json_object_object_add(jobj, "timestamp_", json_object_new_string("This is timestamp"));
-    json_object_object_add(jobj, "message", json_object_new_string(message));
+    struct timespec ts;
+    char timestr[32];
 
-    /*
-    If incoming jobj does not have timestamp_
-        add it here
-    */
+    strcpy(timestr, "TIMESTAMP_NULL");
+
+    if (clock_gettime(CLOCK_REALTIME, &ts) != -1) {
+        if (timespec_iso8601(timestr, sizeof(timestr), &ts) != 0) {
+            strcpy(timestr, "timestamping error");
+        }
+    }
+
+    json_object_object_add(jobj, "timestamp_", json_object_new_string(timestr));
+    json_object_object_add(jobj, "message", json_object_new_string(message));
 
     switch (ll) {
         case DEBUG:
