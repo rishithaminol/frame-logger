@@ -105,8 +105,7 @@ static void *packet_printer_thread(void *arg)
 }
 
 /**
- * @todo Need to apply a way to handle packets sent from stdin.
- *        @ref STREAM_STDIN.
+ * @todo Implement network session identification with the duration
 */
 int processor_packet_stream(char *source, packet_chain_t *chain,
                             processor_opt_t p_opt)

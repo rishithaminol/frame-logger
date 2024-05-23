@@ -9,13 +9,6 @@
  * \ref packet_chain_t. With this mechanism we can optimize data fetching and
  * outputting paralalley.
  * 
- * @todo Design unit test to pump huge amount of network packets at high speed
- *          and at the same time pop out packet from the packet_chain. At the
- *          end of the process check whether the required amount of packets
- *          processed within the packet_chain.
- * @todo Design Unit tests to check whether \ref packet_chain_t is defensive for
- *          memory leaks.
- * 
  * \ref packet_chain_t is a linked list of packet_link(s). There are 3 states
  * of a \ref packet_chain_t.
  * 1. Packet chain does not have any link (\ref packet_chain_t.head and
