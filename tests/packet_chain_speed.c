@@ -16,8 +16,10 @@
 #include "packet_chain.h"
 
 int packet_count = 0;
+int endles_loop = 1;
 
-void *packet_stream_(void *chain) {
+void *packet_stream_(void *chain)
+{
     packet_chain_t *x = (packet_chain_t *)chain;
 
     processor_packet_stream("-", x, STREAM_FILE);
@@ -26,11 +28,12 @@ void *packet_stream_(void *chain) {
 }
 
 /** @brief endless loop */
-void *count_packets_(void *chain) {
+void *count_packets_(void *chain)
+{
     packet_chain_t *x = (packet_chain_t *)chain;
     packet_link_t *link = NULL;
 
-    while (1) {
+    while (endles_loop) {
         while ((link = packet_chain_pop(x)) != NULL) {
             free_packet_link(link);
             packet_count++;
@@ -68,6 +71,10 @@ int main(int argc, char *argv[])
         if (packet_count != count)
             sleep(1);
     }
+
+    endles_loop = 0;
+    pthread_join(thrd1, NULL);
+    free_packet_chain(chain);
 
     if (packet_count != count){
         fprintf(stderr, "Desired number of packets and captured packet count does not match\n");

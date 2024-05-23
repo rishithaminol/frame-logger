@@ -36,9 +36,11 @@
 
 void free_packet_link(packet_link_t *packet_link)
 {
-    free(packet_link->packet);
-    free(packet_link->packet_header);
-    free(packet_link);
+    if (packet_link != NULL) {
+        free(packet_link->packet);
+        free(packet_link->packet_header);
+        free(packet_link);
+    }
 }
 
 void free_packet_chain(packet_chain_t *chain)
@@ -118,6 +120,9 @@ close_lock:
 packet_link_t *packet_chain_pop(packet_chain_t *chain)
 {
     packet_link_t *ret;
+
+    if (chain == NULL)
+        return NULL;
 
     pthread_mutex_lock(&(chain->lock));
 

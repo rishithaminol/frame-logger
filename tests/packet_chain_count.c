@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
 
     printf("Captured packets: %d\n", i);
 
+    free_packet_chain(chain);
+
     if (i != count){
         fprintf(stderr, "Desired number of packets and captured packet count does not match\n");
         return 1;
