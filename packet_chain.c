@@ -9,6 +9,13 @@
  * \ref packet_chain_t. With this mechanism we can optimize data fetching and
  * outputting paralalley.
  * 
+ * The design of packet chain is to quickly copy
+ * pcap captured data as soon as possible without interruptig pcap_loop
+ * (holding). If we interrupt, data buffering cost will be at pcap_loop
+ * hand. As soon as pcap_loop callback function triggers it quickly copy
+ * data into packet_chain structure. Then it triggers
+ * \ref packet_chain_t->trigger_cond.
+ * 
  * \ref packet_chain_t is a linked list of packet_link(s). There are 3 states
  * of a \ref packet_chain_t.
  * 1. Packet chain does not have any link (\ref packet_chain_t.head and
@@ -39,6 +46,8 @@ void free_packet_link(packet_link_t *packet_link)
 void free_packet_chain(packet_chain_t *chain)
 {
     pthread_mutex_destroy(&chain->lock);
+    pthread_mutex_destroy(&chain->trigger_lock);
+    pthread_cond_destroy(&chain->trigger_cond);
 
     free(chain);
 }
@@ -142,6 +151,10 @@ packet_chain_t *new_packet_chain(void)
     packet_chain_t *chain = malloc(sizeof(packet_chain_t));
 
     pthread_mutex_init(&chain->lock, NULL);
+    pthread_mutex_init(&chain->trigger_lock, NULL);
+    pthread_cond_init(&chain->trigger_cond, NULL);
+    chain->trigger_is = inactive;
+
     chain->head = NULL;
     chain->tail = NULL;
 

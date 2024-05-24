@@ -28,6 +28,7 @@
  *          protocol is decided by reading the IP packet data. And sometimes
  *          other techniques aso used. So we need to specifically output which
  *          technique is used to identify the protocol.
+ * @todo We should output TTL of each packet if it can be found.
 */
 static void print_packet_info(packet_link_t *pkt_link)
 {
@@ -69,18 +70,40 @@ static void print_packet_info(packet_link_t *pkt_link)
     json_object_put(jobj);
 }
 
-
 static void packet_chain_handler(unsigned char *user,
                                   const struct pcap_pkthdr *packet_header,
                                   const uint8_t *packet_body)
 {
+    /**
+     * @brief packet chain structure
+     */
     packet_chain_t *pkt_chain = (packet_chain_t *)user;
 
     packet_chain_put(packet_header, packet_body, pkt_chain);
+
+    /** @todo In future we have to design a function to process extracted data in
+     * \p pkt_chain. In this section we basically trigger the printer. But before
+     * triggering \ref packet_printer_thread we have to process captured data.
+     * Then \ref packet_printer_thread should come after that.
+     * The \ref packet_chain_t.trigger_lock is designed for triggering the
+     * processing part of captured data. But for now it is used to trigger
+     * \ref packet_printer_thread. The idea here is to trigger \ref packet_chain_t data
+     * processor and trigger \ref packet_printer_thread by that processor
+     */
+
+    // Signal to the thread to continue
+    pthread_mutex_lock(&pkt_chain->trigger_lock);
+    if (pkt_chain->trigger_is == inactive)
+        pthread_cond_signal(&pkt_chain->trigger_cond);
+    pthread_mutex_unlock(&pkt_chain->trigger_lock);
 }
 
 /**
  * @brief This function triggers the printing of packet details as json log
+ * 
+ * @todo Move this function into \ref packet_chain.c section. I feel that this should
+ *       reside in that section as always running thread or another mechanism.
+ *       We should not print things as JSON without formatting correctly.
  * 
  * This function runs as a thread and it will be triggered by
  *  @ref processor_packet_stream
@@ -91,14 +114,16 @@ static void *packet_printer_thread(void *arg)
     packet_link_t *link = NULL;
 
     while (1) {
-        sleep(1);
-
-        log_info("Starting to free memory");
-
         while ((link = packet_chain_pop(chain)) != NULL) {
             print_packet_info(link);
             free_packet_link(link);
         }
+
+        pthread_mutex_lock(&chain->trigger_lock);
+        chain->trigger_is = inactive;
+        pthread_cond_wait(&chain->trigger_cond, &chain->trigger_lock);
+        chain->trigger_is = active;
+        pthread_mutex_unlock(&chain->trigger_lock);
     }
 
     return NULL;

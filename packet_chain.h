@@ -14,10 +14,18 @@ struct packet_link {
     packet_link_t *next;
 };
 
+enum packet_chain_trigger {
+    active,
+    inactive
+};
 typedef struct packet_chain {
     struct packet_link *head;
     struct packet_link *tail;
     pthread_mutex_t lock;
+
+    pthread_mutex_t trigger_lock;
+    pthread_cond_t  trigger_cond;
+    enum packet_chain_trigger trigger_is;
 } packet_chain_t;
 
 extern void packet_chain_put(const struct pcap_pkthdr *pkt_hdr,
