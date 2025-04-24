@@ -1,18 +1,20 @@
 include_directories(../)
 
-add_executable(timestamping timestamping.c ../timeutils.c)
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+add_executable(timestamping timestamping.c ${CMAKE_SOURCE_DIR}/src/timeutils.c)
 add_executable(packet_chain_count packet_chain_count.c
-                ../packet_chain.c
-                ../logging.c
-                ../processor.c
-                ../timeutils.c
-                ../ethertype.c)
+                ${CMAKE_SOURCE_DIR}/src/packet_chain.c
+                ${CMAKE_SOURCE_DIR}/src/logging.c
+                ${CMAKE_SOURCE_DIR}/src/processor.c
+                ${CMAKE_SOURCE_DIR}/src/timeutils.c
+                ${CMAKE_SOURCE_DIR}/src/ethertype.c)
 add_executable(packet_chain_speed packet_chain_speed.c
-                ../packet_chain.c
-                ../logging.c
-                ../processor.c
-                ../timeutils.c
-                ../ethertype.c)
+                ${CMAKE_SOURCE_DIR}/src/packet_chain.c
+                ${CMAKE_SOURCE_DIR}/src/logging.c
+                ${CMAKE_SOURCE_DIR}/src/processor.c
+                ${CMAKE_SOURCE_DIR}/src/timeutils.c
+                ${CMAKE_SOURCE_DIR}/src/ethertype.c)
 
 target_link_libraries(packet_chain_count json-c pcap pthread)
 target_link_libraries(packet_chain_speed json-c pcap pthread)
