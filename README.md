@@ -1,5 +1,8 @@
 # Frame Logger
-A tool which capture packets in an inteligence manner. This can run in memory safe way.
+
+**Frame Logger** is a high-performance, memory-safe tool that captures network packets intelligently.  
+It is designed for developers and network engineers who need detailed traffic analysis without compromising system stability.
+
 
 # License
 
