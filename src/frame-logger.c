@@ -50,7 +50,7 @@ void usage(void)
            "\t-r,--read\t\tRead from file. Use '-' for stdin\n"
            "\t-i,--interface\t\tNetwork inteface for monitoring traffic\n"
            "\t--timezone\t\tSet timezone related data\n"
-           "\t--version\t\tProgram version");
+           "\t--version\t\tProgram version\n");
 }
 
 /**
