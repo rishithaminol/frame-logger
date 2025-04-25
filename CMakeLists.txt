@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.26)
 
-project (frame-logger VERSION 0.1.1)
+project (frame-logger VERSION 0.1.2)
 
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
-set(PROJECT_VERSION_PATCH 1)
+set(PROJECT_VERSION_PATCH 2)
 
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_BUILD_TYPE Debug)

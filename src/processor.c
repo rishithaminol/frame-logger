@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <pcap/pcap.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 #include <net/ethernet.h>
 #include <json.h>
 #include <string.h>
@@ -47,13 +49,15 @@
 
 #include "processor.h"
 
+#define IP_STR_MAX_LEN 46
+
 /**
  * @todo This function should have nested json structuring.
  * @todo Create unit tests to accurately check nano second timestamping. This should be
  *          an intergrated test which connect to Elasticsearch and do the testing.
  * @todo Most of the time protocol is decided by the port number. Sometimes
  *          protocol is decided by reading the IP packet data. And sometimes
- *          other techniques aso used. So we need to specifically output which
+ *          other techniques can also be used. So we need to specifically output which
  *          technique is used to identify the protocol.
  * @todo We should output TTL of each packet if it can be found.
 */
@@ -61,6 +65,9 @@ static void print_packet_info(packet_link_t *pkt_link)
 {
     char src_mac[18], dst_mac[18];
     struct json_object *jobj = json_object_new_object();
+    char ip_protocol[10];
+    uint16_t eth_type;
+    char src_ip[IP_STR_MAX_LEN], dst_ip[IP_STR_MAX_LEN];
 
     const uint8_t *packet = pkt_link->packet;
     struct pcap_pkthdr *packet_header = pkt_link->packet_header;
@@ -76,21 +83,71 @@ static void print_packet_info(packet_link_t *pkt_link)
         strcpy(timestr, "timestamping error");
     }
 
+
     /* Get Ethernet header related data */
     struct ether_header *eth_header = (struct ether_header *)packet;
+
+    eth_type = ntohs(eth_header->ether_type);
     ether_ntoa_r((struct ether_addr *)eth_header->ether_shost, src_mac);
     ether_ntoa_r((struct ether_addr *)eth_header->ether_dhost, dst_mac);
-    fl_eth_type_t *eth_type = get_fl_eth_type(ntohs(eth_header->ether_type));
+    fl_eth_type_t *fl_eth_type = get_fl_eth_type(eth_type);
 
     json_object_object_add(jobj, "timestamp_", json_object_new_string(timestr));
     json_object_object_add(jobj, "packet_header.caplen", json_object_new_int(packet_header->caplen));
     json_object_object_add(jobj, "packet_header.len", json_object_new_int(packet_header->len));
-    json_object_object_add(jobj, "ethernet.type.code", json_object_new_string(eth_type->short_code));
+    json_object_object_add(jobj, "ethernet.type.code", json_object_new_string(fl_eth_type->short_code));
     json_object_object_add(jobj, "ethernet.type.value", json_object_new_int64(ntohs(eth_header->ether_type)));
-    json_object_object_add(jobj, "ethernet.type.desc", json_object_new_string(eth_type->type_desc));
+    json_object_object_add(jobj, "ethernet.type.desc", json_object_new_string(fl_eth_type->type_desc));
     json_object_object_add(jobj, "ethernet.addr.dst", json_object_new_string(dst_mac));
     json_object_object_add(jobj, "ethernet.addr.src", json_object_new_string(src_mac));
     json_object_object_add(jobj, "log.level", json_object_new_string("INFO"));
+
+    /* Extract IPv4 header */
+    if (eth_type == ETHERTYPE_IP) {
+        struct ip *ip_header = (struct ip *)(packet + sizeof(struct ether_header));
+        strcpy(src_ip, inet_ntoa(ip_header->ip_src));
+        strcpy(dst_ip, inet_ntoa(ip_header->ip_dst));
+
+
+        // Convert ip_off from network byte order to host byte order
+        uint16_t frag_field = ntohs(ip_header->ip_off);
+
+        // Extract flags
+        int reserved_flag = (frag_field & IP_RF) >> 15;
+        int dont_fragment = (frag_field & IP_DF) >> 14;
+        int more_fragments = (frag_field & IP_MF) >> 13;
+
+        int fragment_offset = frag_field & IP_OFFMASK;
+
+        json_object_object_add(jobj, "ip.frag.rf", json_object_new_int(reserved_flag));
+        json_object_object_add(jobj, "ip.frag.df", json_object_new_int(dont_fragment));
+        json_object_object_add(jobj, "ip.frag.mf", json_object_new_int(more_fragments));
+        json_object_object_add(jobj, "ip.frag.offset", json_object_new_int(fragment_offset));
+
+        switch(ip_header->ip_p) {
+            case IPPROTO_ICMP:
+                strcpy(ip_protocol, "ICMP");
+                break;
+            case IPPROTO_TCP:
+                strcpy(ip_protocol, "TCP");
+                break;
+            case IPPROTO_UDP:
+                strcpy(ip_protocol, "UDP");
+                break;
+            default:
+                strcpy(ip_protocol, "UNKNOWN");
+        }
+
+        json_object_object_add(jobj, "ip.src", json_object_new_string(src_ip));
+        json_object_object_add(jobj, "ip.dst", json_object_new_string(dst_ip));
+        json_object_object_add(jobj, "ip.header_length", json_object_new_int(ip_header->ip_hl * 4));
+        json_object_object_add(jobj, "ip.protocol", json_object_new_string(ip_protocol));
+        json_object_object_add(jobj, "ip.total_length", json_object_new_int(ntohs(ip_header->ip_len)));
+        json_object_object_add(jobj, "ip.frag.id", json_object_new_int(ntohs(ip_header->ip_id))); /* Fragmentation ID */
+        json_object_object_add(jobj, "ip.checksum", json_object_new_int(ntohs(ip_header->ip_sum)));
+        json_object_object_add(jobj, "ip.ttl", json_object_new_int(ip_header->ip_ttl));
+        json_object_object_add(jobj, "ip.tos", json_object_new_int(ip_header->ip_tos)); /* Type of Service */
+    }
 
     printf("%s\n", json_object_to_json_string_ext(jobj, JSON_C_TO_STRING_PLAIN));
 
@@ -227,7 +284,7 @@ int processor_packet_stream(char *source, packet_chain_t *chain,
             log_info("Timestamp percision: PCAP_TSTAMP_PRECISION_NANO");
             break;
         default:
-            log_error("SOme other value");
+            log_error("Some other value");
     }
 
     /* Currently this program supports only Ethernet card types.
