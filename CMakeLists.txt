@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.26)
 
-project (frame-logger VERSION 0.1.2)
+project (frame-logger VERSION 0.2.0)
 
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 1)
-set(PROJECT_VERSION_PATCH 2)
+set(PROJECT_VERSION_MINOR 2)
+set(PROJECT_VERSION_PATCH 0)
 
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_BUILD_TYPE Debug)
@@ -42,6 +42,7 @@ link_directories(${JSONC_BIN_DIR})
 
 set(SOURCES
     src/frame-logger.c
+    src/utils.c
     src/logging.c
     src/processor.c
     src/ethertype.c
