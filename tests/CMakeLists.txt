@@ -8,13 +8,15 @@ add_executable(packet_chain_count packet_chain_count.c
                 ${CMAKE_SOURCE_DIR}/src/logging.c
                 ${CMAKE_SOURCE_DIR}/src/processor.c
                 ${CMAKE_SOURCE_DIR}/src/timeutils.c
-                ${CMAKE_SOURCE_DIR}/src/ethertype.c)
+                ${CMAKE_SOURCE_DIR}/src/ethertype.c
+                ${CMAKE_SOURCE_DIR}/src/utils.c)
 add_executable(packet_chain_speed packet_chain_speed.c
                 ${CMAKE_SOURCE_DIR}/src/packet_chain.c
                 ${CMAKE_SOURCE_DIR}/src/logging.c
                 ${CMAKE_SOURCE_DIR}/src/processor.c
                 ${CMAKE_SOURCE_DIR}/src/timeutils.c
-                ${CMAKE_SOURCE_DIR}/src/ethertype.c)
+                ${CMAKE_SOURCE_DIR}/src/ethertype.c
+                ${CMAKE_SOURCE_DIR}/src/utils.c)
 
 target_link_libraries(packet_chain_count json-c pcap pthread)
 target_link_libraries(packet_chain_speed json-c pcap pthread)

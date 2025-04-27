@@ -1,9 +1,8 @@
-name: Build
+name: CI test
 
 on:
   push:
     branches:
-      - "master"
       - "development/**"
 
 jobs:

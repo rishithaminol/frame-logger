@@ -32,9 +32,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
 #include <pcap/pcap.h>
-
+#include <stdbool.h>
 #include <json.h>
 
 #include "logging.h"
@@ -42,6 +43,12 @@
 #include "timeutils.h"
 #include "packet_chain.h"
 #include "prog_version.h"
+#include "utils.h"
+
+enum {
+    GETOPT_FILTER = 1000,   // start from 1 to avoid clashing with short options
+    GETOPT_HELP
+};
 
 
 void usage(void)
@@ -49,6 +56,7 @@ void usage(void)
     printf("Usage:\n"
            "\t-r,--read\t\tRead from file. Use '-' for stdin\n"
            "\t-i,--interface\t\tNetwork inteface for monitoring traffic\n"
+           "\t--filter\t\ttcpdump similar filter expression\n"
            "\t--timezone\t\tSet timezone related data\n"
            "\t--version\t\tProgram version\n");
 }
@@ -63,6 +71,7 @@ int main(int argc, char *argv[])
     struct option long_options[] = {
         {"read", required_argument, NULL, 'r'},
         {"interface", required_argument, NULL, 'i'},
+        {"filter", required_argument, NULL, GETOPT_FILTER},
         {"version", no_argument, NULL, 'v'},
         // {"output-file", required_argument, NULL, 'o'},
         // {"verbose", no_argument, NULL, 'v'},
@@ -70,17 +79,30 @@ int main(int argc, char *argv[])
     };
     packet_chain_t *chain = new_packet_chain();
 
+    /* Option selection specific variables */
+    int use_file = 0;
+    int use_interface = 0;
+    int use_filter = 0;
+    char filter_string[255];
+    char pcap_source[20];       /*!< eth0 if net interface or some file path */
+
+    pcap_t *handle = NULL;
+
     set_timezone("UTC");
 
     while ((opt_key = getopt_long(argc, argv, "r:i:v", long_options, &option_index)) != -1) {
         switch (opt_key) {
+            case GETOPT_FILTER:
+                strcpy(filter_string, optarg);
+                use_filter = 1;
+                break;
             case 'r':
-                processor_packet_stream(optarg, chain,
-                                        STREAM_FILE | JSON_LOGGER);
+                strcpy(pcap_source, optarg);
+                use_file = 1;
                 break;
             case 'i':
-                processor_packet_stream(optarg, chain,
-                                        STREAM_NET_INTERFACE | JSON_LOGGER);
+                strcpy(pcap_source, optarg);
+                use_interface = 1;
                 break;
             case 'v':
                 printf("%s version: %d.%d.%d\n", argv[0],
@@ -92,10 +114,28 @@ int main(int argc, char *argv[])
                 usage();
                 return 1;
             default:
-                printf("Hello world\n");
+                log_error("parameter handling malfunction.\n");
                 break;
         }
     }
+
+    if (use_file == 1 && use_interface == 1) {      /* User is not allowed both */
+        printf("Standard input and interface can not be used at the same time\n");
+        return 1;
+    }
+
+    if (use_file) {
+        handle = refined_pcap_handle(pcap_source, STREAM_FILE);
+    } else if (use_interface) {
+        handle = refined_pcap_handle(pcap_source, STREAM_NET_INTERFACE);
+    }
+
+    if (use_filter) {
+        log_info("Using filter: %s", filter_string);
+        apply_pcap_filter(handle, pcap_source, filter_string);
+    }
+
+    packet_chain_processor(handle, chain, true);
 
     return 0;
 }

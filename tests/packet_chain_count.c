@@ -31,6 +31,7 @@
 
 #include "processor.h"
 #include "packet_chain.h"
+#include "utils.h"
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +51,8 @@ int main(int argc, char *argv[])
     }
 
     packet_chain_t *chain = new_packet_chain();
-    processor_packet_stream(argv[1], chain, STREAM_FILE);
+    pcap_t *handle = refined_pcap_handle(argv[1], STREAM_FILE);
+    packet_chain_processor(handle, chain, 0);
 
     /**
      * @brief This loop checks whether the processor accurately captures the

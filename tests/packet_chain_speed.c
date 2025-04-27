@@ -41,6 +41,7 @@
 
 #include "processor.h"
 #include "packet_chain.h"
+#include "utils.h"
 
 int packet_count = 0;
 int endles_loop = 1;
@@ -48,8 +49,9 @@ int endles_loop = 1;
 void *packet_stream_(void *chain)
 {
     packet_chain_t *x = (packet_chain_t *)chain;
+    pcap_t *handle = refined_pcap_handle("-", STREAM_FILE);
 
-    processor_packet_stream("-", x, STREAM_FILE);
+    packet_chain_processor(handle, x, 0);
 
     return NULL;
 }
